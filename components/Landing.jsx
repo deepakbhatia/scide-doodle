@@ -1,7 +1,6 @@
 'use client';
 import Link from 'next/Link'
 import TopLists from "@components/TopList";
-import TopModels from "@components/TopModels";
 const Landing = () => {
     return (
         <>

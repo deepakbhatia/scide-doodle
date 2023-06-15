@@ -30,7 +30,7 @@ const Nav = () => {
             <div className={"sm:flex hidden"}>
                 {isUserLoggedIn? (
                     <div className={"flex gap-3 md:gap-5"}>
-                        <Link href={"/create-post"} className={"black_btn"}>
+                        <Link href={"/create-dao"} className={"black_btn"}>
                             Create a Post
                         </Link>
                         <button type="button"
