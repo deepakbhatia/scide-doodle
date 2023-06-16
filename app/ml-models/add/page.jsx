@@ -1,7 +1,9 @@
 'use client';
 import React, { useState, useRef } from "react";
+import {useRouter} from "@node_modules/next/navigation";
 
 const AddModel = () => {
+    const router = useRouter()
     const [modelName, setModelName] = useState("");
     const [modelUrl, setModelUrl] = useState("");
     const [description, setDescription] = useState("");
@@ -13,13 +15,21 @@ const AddModel = () => {
     const [dockerImageUrl, setDockerImageUrl] = useState("");
 
     const [submitting, setSubmitting] = useState(false);
-    const [ModelPost, setModelPost] = useState({
+    const [modelPost, setModelPost] = useState({
+        user: '',
+        dao:'',
         modelName: '',
         modelUrl: '',
         modelDescription:'',
         category:'',
-    });
+        accuracy:'',
+        precision:'',
+        recall:'',
+        trainingDataUrl:'',
+        dockerImageUrl:'',
 
+    });
+    setSubmitting(true)
     const addAccuracy = (num) => {
         if (typeof num !== "number" || isNaN(num) || num > 1) {
             setAccuracy(0);

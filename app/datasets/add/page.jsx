@@ -1,20 +1,25 @@
 'use client';
 import React, { useState, useRef } from "react";
+import {useRouter} from "@node_modules/next/navigation";
 
 const AddDataset = () => {
+    const router = useRouter()
     const [datasetName, setdatasetName] = useState("");
     const [dataSetUrl, setDataSetUrl] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState("");
+    const [licence, setLicence] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [dataSetPost, setDataSetPost] = useState({
+        user: '',
+        dao:'',
         datasetName: '',
         dataSetUrl: '',
         datasetDescription:'',
         category:'',
         licence:''
     });
-
+    setSubmitting(true)
     const fileInputRef = useRef(null);
     const handleClick = () => {
         // 👇️ open file input box on click of another element

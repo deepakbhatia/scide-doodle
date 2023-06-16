@@ -1,7 +1,9 @@
 'use client';
 import React, { useState, useRef } from "react";
+import {useRouter} from "next/navigation";
 
 const AddDao = () => {
+    const router = useRouter()
     const [token, setToken] = useState("");
     const [daoName, setDaoName] = useState("");
     const [logo, setLogo] = useState("");
@@ -10,15 +12,20 @@ const AddDao = () => {
     const [votingType, setVotingType] = useState("");
     const [governanceParticipants, setGovernanceParticipants] = useState("");
     const [proposalCreators, setProposalCreators] = useState("");
-
+    const [gated, setGated] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [dataSetPost, setDataSetPost] = useState({
-
+        user: '',
+        logo:'',
         token: '',
         daoName: '',
         dataSetUrl: '',
         daoDescription:'',
         category:'',
+        votingType:'',
+        governanceParticipants:'',
+        proposalCreators:'',
+        gated:false
     });
 
     const fileInputRef = useRef(null);
@@ -34,7 +41,7 @@ const AddDao = () => {
     const storeLogo = async(e) =>{
         
     }
-
+    setSubmitting(true)
     return (
         <div className='w-full max-w-full flex-start flex-col'>
             <h3 className='head_text text-left'>
