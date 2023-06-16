@@ -19,7 +19,7 @@
 }
 
 .main:before {
-    background: radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%);
+    background: radial-gradient(circle, rgba(150, 0, 123, 0) 0, #fafafa 100%);
     position: absolute;
     content: "";
     z-index: 2;
@@ -74,7 +74,7 @@
 /* Tailwind Styles */
 
 .app {
-    @apply relative flex justify-start items-start flex-col max-w-full m-10 ;
+    @apply relative flex justify-start items-start flex-col max-w-full mx-10 my-10 mt-2 ;
 }
 
 .black_btn {
@@ -86,7 +86,7 @@
 }
 
 .head_text {
-    @apply mt-5 text-5xl font-extrabold leading-[1.15] text-black sm:text-6xl;
+    @apply mt-5 text-3xl font-extrabold leading-[1.15] text-black sm:text-4xl;
 }
 
 .orange_gradient {

@@ -17,7 +17,7 @@ const Nav = () => {
         setProviders()
     }, [])
     return (
-        <nav className={"flex-between w-full mb-16 pt-10"}>
+        <nav className={"flex-between w-full mb-0 pt-2"}>
             <Link href="/" className={"flex gap-2 flex-center"}>
                 <Image
                     src={"/assets/images/logo.svg"}
@@ -27,23 +27,60 @@ const Nav = () => {
                 <p className={"logo_text"}>Promptopia</p>
             </Link>
 
-            <div className={"sm:flex hidden"}>
+            <div className={"sm:flex hidden relative"}>
                 {isUserLoggedIn? (
-                    <div className={"flex gap-3 md:gap-5"}>
-                        <Link href={"/create-dao"} className={"black_btn"}>
-                            Create a Post
-                        </Link>
-                        <button type="button"
-                                // onClick={ () => {}}
-                                className="outline_btn">Sign Out</button>
-                        <Link href={"/profile"} >
+
+                        <div className={"flex"}>
                             <Image
                                 src={"/assets/images/logo.svg"}
                                 width={37}
                                 height={37}
                                 className={"rounded-full"}
-                                alt={"Profile"} />
-                            </Link>
+                                alt={"Profile"}
+                                onClick={ () => setToggleDropdown( (prev) => !prev) }
+                            />
+                            {toggleDropDown && (
+                                <div className={"dropdown"}>
+                                    <Link
+                                        href={"/profile"}
+                                        className={"dropdown_link"}
+                                        onClick={() => setToggleDropdown(false)}
+                                    >
+                                        My Profile
+                                    </Link>
+                                    <button type="button"
+                                        onClick={ () => {}}
+                                        className="outline_btn">Sign Out
+                                    </button>
+                                    <Link href={"/daos/create"}
+                                          className={"black_btn mt-3"}
+                                          onClick={() => setToggleDropdown(false)}
+                                    >
+                                        Build a Dao
+                                    </Link>
+                                    <Link href={"/datasets/add"}
+                                          className={"black_btn  mt-3"}
+                                          onClick={() => setToggleDropdown(false)}
+                                    >
+                                        Add a dataset
+                                    </Link>
+                                    <Link
+                                        href={"/ml-models/add"}
+                                        className={"black_btn  mt-3"}
+                                        onClick={() => setToggleDropdown(false)}
+                                    >
+                                        Add a model
+                                    </Link>
+                                {/*<Link href={"/profile"} >*/}
+                                {/*    <Image*/}
+                                {/*        src={"/assets/images/logo.svg"}*/}
+                                {/*        width={37}*/}
+                                {/*        height={37}*/}
+                                {/*        className={"rounded-full"}*/}
+                                {/*        alt={"Profile"} />*/}
+                                {/*    </Link>*/}
+                                    </div>
+                            )}
                     </div>
 
                 ):(
@@ -52,7 +89,7 @@ const Nav = () => {
                                     <button
                                         type="button"
                                         key={provider.name}
-                                        // onClick={() => {}}
+                                        onClick={() => {}}
                                         className={'black_btn'}
                                     >
                                     </button>
@@ -72,30 +109,30 @@ const Nav = () => {
                             height={37}
                             className={"rounded-full"}
                             alt={"Profile"}
-                            // onClick={ () => setToggleDropdown( (prev) => !prev)}
+                            onClick={ () => setToggleDropdown( (prev) => !prev)}
                         />
                         {toggleDropDown && (
                             <div className={"dropdown"}>
                                 <Link
                                     href={"/profile"}
                                     className={"dropdown_link"}
-                                    // onClick={() => setToggleDropDown(false)}
+                                    onClick={() => setToggleDropdown(false)}
                                 >
                                     My Profile
                                 </Link>
                                 <Link
                                     href={"/profile"}
                                     className={"dropdown_link"}
-                                    // onClick={() => setToggleDropDown(false)}
+                                    onClick={() => setToggleDropdown(false)}
                                     >
                                     Create Prompt
                                 </Link>
                                 <button
                                     type={"button"}
-                                    // onClick={ () => {
-                                    //     setToggleDropdown(false)
-                                    //     //signOut()
-                                    // }}
+                                    onClick={ () => {
+                                        setToggleDropdown(false)
+                                        //signOut()
+                                    }}
                                     className={"mt-5 w-full black_btn"}
 
                                     >
