@@ -3,7 +3,7 @@ export const GET = async (request) => {
         //await connectToDB()
 
         //const prompts = await Prompt.find({}).populate('creator')
-        const models = [
+        const model = [
             {
                 user: '',
                 modelName: '',
@@ -18,8 +18,8 @@ export const GET = async (request) => {
 
             }
         ]
-        return new Response(JSON.stringify(models), { status: 200 })
+        return new Response(JSON.stringify(model), { status: 200 })
     } catch (error) {
-        return new Response("Failed to fetch all models", { status: 500 })
+        return new Response("Failed to fetch all model", { status: 500 })
     }
 }

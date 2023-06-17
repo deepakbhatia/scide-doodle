@@ -3,7 +3,7 @@ export const GET = async (request) => {
         //await connectToDB()
 
         //const datasets = await Prompt.find({}).populate('creator')
-        const datasets = [
+        const dataset = [
             {
                 user: '',
                 dao:'',
@@ -14,7 +14,7 @@ export const GET = async (request) => {
                 licence:''
             }
         ]
-        return new Response(JSON.stringify(datasets), { status: 200 })
+        return new Response(JSON.stringify(dataset), { status: 200 })
     } catch (error) {
         return new Response("Failed to fetch all datasets", { status: 500 })
     }

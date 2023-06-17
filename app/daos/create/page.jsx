@@ -41,7 +41,7 @@ const AddDao = () => {
     const storeLogo = async(e) =>{
         
     }
-    setSubmitting(true)
+    //setSubmitting(true)
     return (
         <div className='w-full max-w-full flex-start flex-col'>
             <h3 className='head_text text-left'>

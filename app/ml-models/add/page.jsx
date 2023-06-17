@@ -1,6 +1,9 @@
 'use client';
 import React, { useState, useRef } from "react";
 import {useRouter} from "@node_modules/next/navigation";
+import lighthouse from "@lighthouse-web3/sdk";
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 const AddModel = () => {
     const router = useRouter()
@@ -29,7 +32,7 @@ const AddModel = () => {
         dockerImageUrl:'',
 
     });
-    setSubmitting(true)
+    ////setSubmitting(false)
     const addAccuracy = (num) => {
         if (typeof num !== "number" || isNaN(num) || num > 1) {
             setAccuracy(0);
@@ -64,12 +67,18 @@ const AddModel = () => {
             100 - (progressData?.total / progressData?.uploaded)?.toFixed(2);
         //console.log(percentageDone);
     };
-    const uploadFile = async(e) =>{
+    const uploadFile = async (file) =>{
         // Push file to lighthouse node
         // Both file and folder are supported by upload function
-        // console.log('Upload Start:');
-        // const output = await lighthouse.upload(e, process.env.NEXT_PUBLIC_LIGHTHOUSE_SDK_KEY, progressCallback);
-        // console.log('File Status:', output);
+
+        try{
+            const output = await lighthouse.upload(file, process.env.NEXT_PUBLIC_LIGHTHOUSE_SDK_KEY, progressCallback);
+            modelPost['modelUrl'] = 'https://gateway.lighthouse.storage/ipfs/' + output.data.Hash
+            setModelPost(modelPost)
+        }catch (e) {
+            console.log(e)
+        }
+
         // /*
         //   output:
         //     data: {
@@ -80,7 +89,7 @@ const AddModel = () => {
         //   Note: Hash in response is CID.
         // */
 
-        console.log('Visit at https://gateway.lighthouse.storage/ipfs/' + output.data.Hash);
+        //console.log('Visit at https://gateway.lighthouse.storage/ipfs/' + output.data.Hash);
     }
 
     return (
@@ -177,7 +186,10 @@ const AddModel = () => {
                             <div className="flex items-center justify-end">
                                 <input          style={{display: 'none'}}
                                                 ref={fileInputRef}
-                                                onChange={e=>uploadFile(e)} type="file" />
+                                                onChange={e=>uploadFile(e.target.files)}
+                                                type="file"
+
+                                />
                                 <button
                                     onClick={handleClick}
                                     className='py-2 px-6 text-sm bg-orange-500 hover:bg-orange-400 rounded-md text-white'                                >

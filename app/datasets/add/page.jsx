@@ -1,6 +1,11 @@
 'use client';
 import React, { useState, useRef } from "react";
 import {useRouter} from "@node_modules/next/navigation";
+import lighthouse from "@node_modules/@lighthouse-web3/sdk";
+import { ethers } from "ethers";
+import datasetcontract from '../../../contracts/old/VIPDatasetToken.json'
+//import { PKPEthersWallet } from '@lit-protocol/pkp-ethers';
+import Cookies from "js-cookie";
 
 const AddDataset = () => {
     const router = useRouter()
@@ -15,11 +20,42 @@ const AddDataset = () => {
         dao:'',
         datasetName: '',
         dataSetUrl: '',
+        srcUrl: '',
         datasetDescription:'',
         category:'',
         licence:''
     });
-    setSubmitting(true)
+    ////setSubmitting(true)
+    // const mintNFT = async (url) => {
+    //     try {
+    //         const { ethereum } = window;
+    //
+    //         // Checking if user have Metamask installed
+    //         if (!ethereum) {
+    //             // If user doesn't have Metamask installed, throw an error
+    //             alert("Please install MetaMask");
+    //             return;
+    //         }
+    //
+    //         const accounts = await ethereum.request({
+    //             method: "eth_requestAccounts",
+    //         });
+    //
+    //         const provider = new ethers.providers.Web3Provider(ethereum)
+    //         const walletAddress = accounts[0]    // first account in MetaMask
+    //         const signer = provider.getSigner(walletAddress)
+    //         // const user = provider.getSigner();
+    //         // let userAddress = await user.getAddress();
+    //
+    //         const vipdataset = new ethers.Contract('0xC0340c0831Aa40A0791cF8C3Ab4287EB0a9705d8', datasetcontract.abi, signer);
+    //         const tx = await vipdataset.safeMint(walletAddress, url)
+    //         const receipt = await tx.wait();
+    //         console.log(receipt);
+    //
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // };
     const fileInputRef = useRef(null);
     const handleClick = () => {
         // 👇️ open file input box on click of another element
@@ -30,12 +66,38 @@ const AddDataset = () => {
             100 - (progressData?.total / progressData?.uploaded)?.toFixed(2);
         //console.log(percentageDone);
     };
-    const uploadFile = async(e) =>{
+    const uploadFile = async (file) =>{
         // Push file to lighthouse node
         // Both file and folder are supported by upload function
-        // console.log('Upload Start:');
-        // const output = await lighthouse.upload(e, process.env.NEXT_PUBLIC_LIGHTHOUSE_SDK_KEY, progressCallback);
-        // console.log('File Status:', output);
+
+        const litAccess = Cookies.get('lit')
+        if(litAccess != undefined) {
+            const litJson = JSON.parse(litAccess)
+            console.log(litJson)
+            const user = litJson['pkp']['ethAddress']
+            console.log(litJson)
+            console.log(user)
+            try{
+                const output = await lighthouse.upload(file, process.env.NEXT_PUBLIC_LIGHTHOUSE_SDK_KEY, progressCallback);
+                dataSetPost['dataSetUrl'] = 'https://gateway.lighthouse.storage/ipfs/' + output.data.Hash
+                setDataSetPost(dataSetPost)
+                //await mintNFT('https://gateway.lighthouse.storage/ipfs/' + output.data.Hash)
+                const postKeys = await fetch("/api/datasets/mint", {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user: user, dataSetUrl: 'https://gateway.lighthouse.storage/ipfs/' + output.data.Hash})
+                });
+
+                console.log(postKeys)
+            }catch (e) {
+                console.log(e)
+            }
+        }
+
+
         // /*
         //   output:
         //     data: {
@@ -46,7 +108,7 @@ const AddDataset = () => {
         //   Note: Hash in response is CID.
         // */
 
-        console.log('Visit at https://gateway.lighthouse.storage/ipfs/' + output.data.Hash);
+        //console.log('Visit at https://gateway.lighthouse.storage/ipfs/' + output.data.Hash);
     }
 
     return (
@@ -80,10 +142,10 @@ const AddDataset = () => {
 
                                 />
                             </div>
-                            <div className="flex flex-col justify-end flex-row">
+                            <div className="flex items-center justify-end">
                                 <input          style={{display: 'none'}}
                                                 ref={fileInputRef}
-                                                onChange={e=>uploadFile(e)} type="file" />
+                                                onChange={e=>uploadFile(e.target.files)} type="file" />
                                 <button
                                     onClick={handleClick}
                                     className='py-2 px-6 text-sm bg-orange-500 hover:bg-orange-400 rounded-md text-white'                                >

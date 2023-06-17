@@ -1,7 +1,50 @@
 'use client';
 import Link from 'next/Link'
+import Cookies from "js-cookie";
 import TopLists from "@components/TopList";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
 const Landing = () => {
+
+    const router = useRouter()
+    const [reload, setReload] = useState(true)
+    useEffect( () => {
+        if (reload == true) {
+            const storedLit = Cookies.get('lit')
+            try {
+                if (storedLit != undefined) {
+                    const storedSession = JSON.parse(storedLit)
+                    console.log(storedSession)
+                    if (storedSession['pkp'] != undefined) {
+
+                        fetch('/api/users/credit', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({user: storedSession['pkp']['ethAddress']})
+
+                        })
+                            .then( (respon) => {
+                                console.log(respon)
+                                router.push('/datasets')
+                        })
+                            .catch( (err) => {
+                                router.push('/datasets')
+                            })
+
+
+                    }
+                }
+            } catch (e) {
+
+            }
+            setReload(false)
+            console.log()
+        }
+
+    }, [reload]);
     return (
         <>
             <div className="flex flex-row">
