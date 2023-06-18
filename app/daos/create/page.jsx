@@ -1,7 +1,15 @@
 'use client';
 import React, { useState, useRef } from "react";
 import {useRouter} from "next/navigation";
-
+import { PKPEthersWallet } from "@lit-protocol/pkp-ethers"
+import * as LitJsSdk from "@lit-protocol/lit-node-client";
+import Cookies from 'js-cookie'
+import {ethers} from "ethers";
+import * as LitJsSdk_authHelpers from "@node_modules/@lit-protocol/auth-helpers";
+import {LitNodeClient} from "@node_modules/@lit-protocol/lit-node-client";
+import {LitAuthClient} from "@node_modules/@lit-protocol/lit-auth-client";
+import governanceTokenContract from '../../../contracts/DataDaoGovernanceToken.json';
+import timeLockContract from '../../../contracts/DataDaoTimeLock.json.json';
 const AddDao = () => {
     const router = useRouter()
     const [token, setToken] = useState("");
@@ -28,6 +36,21 @@ const AddDao = () => {
         gated:false
     });
 
+    const litNodeClient = new LitNodeClient({
+        litNetwork: "serrano",
+        debug: true
+    });
+    const authClient = new LitAuthClient({
+
+        redirectUri: '/',
+        litRelayConfig: {
+            relayApiKey: process.env.NEXT_PUBLIC_relayApiKey,
+        },
+        litOtpConfig: {
+            baseUrl: "https://auth-api.litgateway.com",
+            port: "443"
+        }
+    });
     const fileInputRef = useRef(null);
     const handleClick = () => {
         // 👇️ open file input box on click of another element
@@ -41,6 +64,46 @@ const AddDao = () => {
     const storeLogo = async(e) =>{
         
     }
+
+    const authDao = async () => {
+        const { ethereum } = window;
+
+        // Checking if user have Metamask installed
+        if (!ethereum) {
+            // If user doesn't have Metamask installed, throw an error
+            alert("Please install MetaMask");
+            return;
+        }
+        const accounts = await ethereum.request({
+            method: "eth_requestAccounts",
+        });
+
+        const provider = new ethers.providers.Web3Provider(ethereum)
+        const walletAddress = accounts[0]    // first account in MetaMask
+        const signer = provider.getSigner(walletAddress)
+
+
+        // Set gas limit and gas price, using the default Ropsten provider
+        const price = ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
+        const options = {gasLimit: 100000, gasPrice: ethers.utils.parseUnits(price, 'gwei')}
+
+        // Deploy the Governance contract
+        const governanceFactory = new ethers.ContractFactory(governanceTokenContract.abi, governanceTokenContract.data.bytecode.object, signer)
+        const contract = await governanceFactory.deploy(["GovToken", "GvToken", 1000])
+
+        await contract.deployed()
+
+        // Deploy the Timelock contract
+        const timeLockFactory = new ethers.ContractFactory(timeLockContract.abi, timeLockContract.data.bytecode.object, signer)
+        const timeLockContract = await timeLockFactory.deploy([1, [], [], signer])
+
+        await timeLockContract.deployed()
+        // Deploy the Governor contract
+
+
+    }
+
+
     //setSubmitting(true)
     return (
         <div className='w-full max-w-full flex-start flex-col'>
@@ -71,7 +134,7 @@ const AddDao = () => {
                         <div className="flex flex-row mt-5 w-[90%]  justify-between">
 
                             <div className="flex flex-col w-2/5   ">
-                                <label className='font-satoshi font-semibold text-base text-gray-700 mt-5'>Category</label>
+                                <label className='font-satoshi font-semibold text-base text-gray-700 mt-5' onClick={authDao}>Category</label>
                                 <select
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}

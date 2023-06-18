@@ -14,8 +14,9 @@ async function getLitNodeClient() {
 }
 
 export const GET = async (request) => {
-    if(encs['val'] != undefined){
-        return new Response(JSON.stringify({ encryptedSymmetricKey: encs['val']['encryptedSymmetricKey'], encryptedString: encs['val']['encryptedString'] }), { status: 200 })
+    const re = JSON.parse(encs['val'])
+    if(re != undefined){
+        return new Response(JSON.stringify({ encryptedSymmetricKey: re['encryptedSymmetricKey'], encryptedString: re['encryptedString'] }), { status: 200 })
     }else{
         return new Response(JSON.stringify({ message: 'Keys not found' }), { status: 404 })
 
@@ -32,7 +33,7 @@ export const POST = async (request) => {
 
         const litNodeClient = await getLitNodeClient();
         const token = crypto.randomUUID();
-        console.log("token:",token);
+
         const { encryptedString, symmetricKey } = await LitJsSdk.encryptString(
             token
         );
@@ -44,8 +45,10 @@ export const POST = async (request) => {
             LitJsSdk.uint8arrayFromString(litNodeClient.subnetPubKey, "base16"),
             symmetricKey
         );
-        encs['val'] = JSON.stringify({ encryptedString: encryptedString,encryptedSymmetricKey: encryptedSymmetricKey, symmetricKey: symmetricKey });
-        return new Response(JSON.stringify({ encryptedString: encryptedString,encryptedSymmetricKey: encryptedSymmetricKey, symmetricKey: symmetricKey }), { status: 200 })
+
+
+        encs['val'] = JSON.stringify({ encryptedString: encryptedString,encryptedSymmetricKey: (encryptedSymmetricKey), symmetricKey: symmetricKey });
+        return new Response(JSON.stringify({ encryptedString: encryptedString,encryptedSymmetricKey: Array.from(encryptedSymmetricKey), symmetricKey: symmetricKey }), { status: 200 })
     } catch (error) {
         return new Response("Failed to generate APIkey", { status: 500 })
     }

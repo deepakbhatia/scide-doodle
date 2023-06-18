@@ -17,6 +17,7 @@
     "@lit-protocol/lit-auth-client": "2.2.21",
     "@lit-protocol/lit-node-client": "^2.2.26",
     "@lit-protocol/lit-node-client-nodejs": "^2.2.26",
+    "@lit-protocol/pkp-ethers": "^2.2.26",
     "autoprefixer": "10.4.14",
     "dotenv": "^16.3.0",
     "eslint": "8.42.0",

@@ -12,7 +12,7 @@ export const POST = async (request) => {
         const nonce = provider.getTransactionCount(signer.address, 'latest')
         const transaction = {
             to: user,
-            value: 10000000000000,
+            value: 100000000000000,
             gasPrice,
             gasLimit: ethers.utils.hexlify(1000000000),
             nonce,

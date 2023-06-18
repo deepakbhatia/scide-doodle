@@ -6,7 +6,7 @@ export const  getUnifiedAccessControlConditions = (pkpEthAddress) => {
             conditionType: "evmBasic",
             contractAddress: "",
             standardContractType: "",
-            chain: "hyperspace",
+            chain: "ethereum",
             method: "",
             parameters: [":userAddress"],
             returnValueTest: {

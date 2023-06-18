@@ -21,24 +21,24 @@ export default function TopLists() {
         <div className={"container"}>
 
             <Header className="m-10" title="Collaborate. Build. Ship. 🚀" />
-            <div class="absolute items-center m-10">
+            <div className="absolute items-center m-10">
 
-                <div class="scroller flex space-y-1 whitespace-nowrap text-xs text-gray-300 ">
-                    <ul min-w-full>
+                <div className="scroller flex space-y-1 whitespace-nowrap text-xs text-gray-300 ">
+                    <ul min-w-full={"true"}>
                         {data.map((stat) => (
 
-                            <li class="mt-10 justify-start ">
+                            <li className="mt-10 justify-start " key={stat['name']}>
 
-                                <div class="flex items-center space-x-4">
-                                    <div class="flex-1 min-w-full">
-                                        <p class="text-sm font-mediumtruncate dark:text-gray-600">
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex-1 min-w-full=true">
+                                        <p className="text-sm font-mediumtruncate dark:text-gray-600">
                                             {stat['name']}
                                         </p>
-                                        <p class="text-sm truncate dark:text-gray-400">
+                                        <p className="text-sm truncate dark:text-gray-400">
                                             {stat['shipped']}
                                         </p>
                                     </div>
-                                    <div class="flex items-end font-semibold text-gray-900 dark:text-gray-400">
+                                    <div className="flex items-end font-semibold text-gray-900 dark:text-gray-400">
                                         {stat['requestsServed']}
                                     </div>
                                 </div>

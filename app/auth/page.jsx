@@ -8,10 +8,12 @@ import Cookies from "js-cookie";
 import { usePathname, useRouter } from "next/navigation";
 import * as LitJsSdk_authHelpers from "@node_modules/@lit-protocol/auth-helpers";
 import {getUnifiedAccessControlConditions, hashBytes} from "@utils/accessConditions";
+import {PKPEthersWallet} from "@node_modules/@lit-protocol/pkp-ethers";
+import {ethers} from "@node_modules/ethers";
 
 const EmailAuth = () => {
-    const [email, setEmail] = useState(null)
-    const [code, setCode] = useState(null)
+    const [email, setEmail] = useState("")
+    const [code, setCode] = useState("")
     let [otpSession, setOtpSession] = useState({});
     let [verifyCode, setVerifyCode] = useState(false);
     let [userId, setUserId] = useState('');
@@ -27,7 +29,7 @@ const EmailAuth = () => {
     const router = useRouter();
     const litNodeClient = new LitNodeClient({
         litNetwork: "serrano",
-        debug: true
+        debug: false
     });
     const authClient = new LitAuthClient({
 
@@ -61,9 +63,6 @@ const EmailAuth = () => {
     const codeVerify = async (e) => {
         //let code = e.target.defaultValue;
         let authMethod = await otpSession.authenticate({code});
-        console.log("-------------------------register-------------------------")
-        console.log(authMethod);
-        console.log("------------------------register--------------------------")
         setAccessToken(authMethod.accessToken);
         let res = await otpSession.fetchPKPsThroughRelayer(authMethod);
         if(res.length == 0){
@@ -72,28 +71,24 @@ const EmailAuth = () => {
         //
         // let mintRes = await otpSession.mintPKPThroughRelayer(authMethod);
         // console.log(mintRes);
-        console.log("***********************register******************************")
         //updatePkpState(res);
         setAccessToken(authMethod.accessToken);
         setSelectedPkp(res[0]);
-        console.log("litAccess:","---------------");
         let litAccess = { accessToken: authMethod.accessToken, pkp: res[0]}
-        console.log("litAccess:",litAccess)
         // if(Cookies.get('lit') != undefined){
         //     litAccess = JSON.parse(Cookies.get('lit'))
         //     litAccess['accessToken'] = authMethod.accessToken
         //     litAccess['pkp'] = res[0]
         // }
-        console.log("litAccess:","---------------");
-        console.log("litAccess:",litAccess)
+
         Cookies.set('lit', JSON.stringify(litAccess), { expires: 7 })
-        const keys = await createKeys()
-        setKeys(keys)
-        await signSessionsig()
+        const apiKeys = await createKeys()
+
+        await signSessionsig(apiKeys, litAccess)
         //setState('display');
         router.push("/");
     };
-    const apiKeys = async () => {
+    const getApiKeys = async () => {
 
         const getKeys = await fetch("/api/platform-key");
         return getKeys
@@ -107,40 +102,38 @@ const EmailAuth = () => {
             'Accept': 'application/json',
                 'Content-Type': 'application/json'
         },
-        body: JSON.stringify({address: ''})
+        body: JSON.stringify({address:''})
         });
         const data = await postKeys.json();
-        console.log(data)
+        return data
         //setAllDatasets(data);
     };
 
 
-    const signSessionsig = async () => {
-
+    const signSessionsig = async (apiKeys, litAccess) => {
+        let sessionSigs = undefined
         try {
             await litNodeClient.connect();
 
-            const encryptedSymmetricKey = keys['encryptedSymmetricKey']
-            const symmetricKey = keys['symmetricKey']
+            const encryptedSymmetricKey = apiKeys['encryptedSymmetricKey']
+            const symmetricKey = apiKeys['symmetricKey']
 
             const authNeededCallback = async authCallbackParams => {
-                let chainId = 3141;
+                let chainId = 1;
                 try {
 
                 } catch {
                     // Do nothing
                 }
-                console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-                console.log(authCallbackParams);
-                console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+
                 let response = await litNodeClient.signSessionKey({
                     authMethods: [
                         {
                             authMethodType: 7,
-                            accessToken: accessToken,
+                            accessToken: litAccess['accessToken'],
                         },
                     ],
-                    pkpPublicKey: selectedPkp.publicKey,
+                    pkpPublicKey: litAccess['pkp']['publicKey'],
                     expiration: authCallbackParams.expiration,
                     resources: authCallbackParams.resources,
                     chainId,
@@ -160,9 +153,9 @@ const EmailAuth = () => {
             );
 
             // Get the session sigs
-            const sessionSigs = await litNodeClient.getSessionSigs({
+            sessionSigs = await litNodeClient.getSessionSigs({
                 expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 24 hours
-                chain: "ethereum",
+                chain: "hyperspace",
                 resourceAbilityRequests: [
                     {
                         resource: litResource,
@@ -174,52 +167,143 @@ const EmailAuth = () => {
                 switchChain: false,
                 authNeededCallback,
             });
-            console.log("sessionSigs: ", sessionSigs);
 
 
-            setSessionSig(sessionSigs);
-            console.log(selectedPkp)
+            //setSessionSig(sessionSigs);
             const unifiedAccessControlConditions = getUnifiedAccessControlConditions(
-                selectedPkp.ethAddress
+                litAccess['pkp']['ethAddress']
             );
-            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 3232323232")
             // store the decryption conditions
+            const uInt8ArrayKey = Uint8Array.from(symmetricKey)
+            const uInt8ArrayEncKey = Uint8Array.from(encryptedSymmetricKey)
+
+            console.log(uInt8ArrayKey)
+            console.log(uInt8ArrayEncKey)
+            const key1 =  LitJsSdk.uint8arrayToString(encryptedSymmetricKey, "base16")
             const val = await litNodeClient.saveEncryptionKey({
-                unifiedAccessControlConditions,
-                symmetricKey,
-                encryptedSymmetricKey,
-                sessionSigs, // Not actually needed for storing encryption condition.
+                unifiedAccessControlConditions: unifiedAccessControlConditions,
+                encryptedSymmetricKey: uInt8ArrayEncKey,
+                sessionSigs: sessionSigs, // Not actually needed for storing encryption condition.
                 chain: "hyperspace",
             });
-            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 444444")
-            console.log(val)
-            console.log(
-                "unifiedAccessControlConditions: ",
-                unifiedAccessControlConditions
-            );
-            const keys = await apiKeys()
+
+            const keys = await getApiKeys()
+            //console.log(keys['encryptedString'])
+
             if(keys?.ok){
-                const keyVal = keys.json()
+                const keyVal = await keys.json()
+                console.log(keyVal)
+                const encString = new Blob([keyVal['encryptedString']])
                 const retrievedSymmKey = await litNodeClient.getEncryptionKey({
                     unifiedAccessControlConditions,
-                    toDecrypt: LitJsSdk.uint8arrayToString(keyVal['encryptedSymmetricKey'], "base16"),
+                    toDecrypt: LitJsSdk.uint8arrayToString(uInt8ArrayEncKey, "base16"),
                     sessionSigs,
-                    chain: "hyperspace"
+                    chain: "ethereum"
                 });
-                console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 555555555")
+                console.log(keyVal['encryptedString'])
                 const decryptedString = await LitJsSdk.decryptString(
-                    keyVal['encryptedString'],
+                    encString,
                     retrievedSymmKey
                 );
-                console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
                 console.log(decryptedString)
             }
 
+
+
         } catch(e) {
-            console.log("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
-            console.log(e);
+            console.log(e)
             setErr(e);
         }
+
+        await authDao(sessionSigs)
+    }
+
+    const authDao = async (sessionSig) => {
+        console.log("authDao")
+        if(Cookies.get('lit') != undefined){
+            const litJson = JSON.parse(Cookies.get('lit'))
+            const accessToken = litJson['accessToken']
+            const PKP_PUBKEY = litJson['pkp']['publicKey']
+            console.log(PKP_PUBKEY)
+            // const CONTROLLER_AUTHSIG = await LitJsSdk.checkAndSignAuthMessage({
+            //     chain: "ethereum",
+            // });
+            //await litNodeClient.connect();
+            //litNodeClient.getSE
+            //
+            // const authNeededCallback = async authCallbackParams => {
+            //     let chainId = 3141;
+            //     try {
+            //
+            //     } catch {
+            //         // Do nothing
+            //     }
+            //     console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+            //     console.log(authCallbackParams);
+            //     console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+            //     let response = await litNodeClient.signSessionKey({
+            //         authMethods: [
+            //             {
+            //                 authMethodType: 7,
+            //                 accessToken: accessToken,
+            //             },
+            //         ],
+            //         pkpPublicKey: PKP_PUBKEY,
+            //         expiration: authCallbackParams.expiration,
+            //         resources: authCallbackParams.resources,
+            //         chainId,
+            //     });
+            //
+            //     return response.authSig;
+            // };
+            //
+            // const sessionSigs = await litNodeClient.getSessionSigs({
+            //     expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 24 hours
+            //     chain: "ethereum",
+            //     resourceAbilityRequests: [
+            //         {
+            //             resource: litResource,
+            //             ability:
+            //             LitJsSdk_authHelpers.LitAbility
+            //                 .AccessControlConditionDecryption,
+            //         },
+            //     ],
+            //     switchChain: false,
+            //     authNeededCallback,
+            // });
+
+            const pkpWallet = new PKPEthersWallet({
+                pkpPubKey: PKP_PUBKEY,
+                controllerSessionSigs: sessionSig,
+                rpc: "https://api.calibration.node.glif.io/rpc/v1",
+
+            });
+
+            await pkpWallet.init();
+            console.log(PKP_PUBKEY)
+            const tx = {
+                to: "0x1cD4147AF045AdCADe6eAC4883b9310FD286d95a",
+                value: 0,
+            };
+
+
+            const signedTx = await pkpWallet.signTransaction(tx);
+            console.log("signedTx:", signedTx);
+
+
+            const sentTx = await pkpWallet.sendTransaction(signedTx);
+            console.log("sentTx:", sentTx);
+
+            const msg = "Secret Message.. shh!"
+            const signedMsg = await pkpWallet.signMessage(msg);
+            console.log("signedMsg:", signedMsg);
+
+
+            const signMsgAddr = ethers.utils.verifyMessage(msg, signedMsg);
+        }
+
+
+
     }
 
     return (
